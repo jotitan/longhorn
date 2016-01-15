@@ -1,0 +1,4 @@
+Longhorn game (Cathala) developped in Go / JS
+
+To launch, have to define port (-port) and webFolder (-webFolder) where resources are stored.
+
