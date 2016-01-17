@@ -1,4 +1,5 @@
 package longhorn
+import "logger"
 
 
 // Represent of player of longhorn
@@ -79,6 +80,7 @@ func (p Player)CountPoint(boardCows []int)int{
 	for _,money := range p.Moneys {
 		total+=money
 	}
+	logger.GetLogger().Info("POINT",p.Id,p.Cows,boardCows,p.Moneys)
 	return total
 }
 

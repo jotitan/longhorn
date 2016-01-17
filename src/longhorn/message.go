@@ -48,7 +48,7 @@ type ServerMessage struct{
 	// colors when snake
 	Colors []int
 	// Save previous winner
-	Winner int
+	Winner string
 	Info string
 }
 
@@ -73,7 +73,7 @@ func NewBeginServerMessage(b Board)ServerMessage{
 
 func NewWinServerMessage(b Board,winner Player, cause string)ServerMessage{
 	sm := NewBeginServerMessage(b)
-	sm.Winner= winner.Id
+	sm.Winner= winner.Name
 	sm.Info = cause
 	sm.Action = "win"
 	return sm

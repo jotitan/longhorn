@@ -245,7 +245,7 @@ func (b * Board)initBoard(){
 
 func (b * Board)ResetBoard(firstPlayer int){
 	b.initBoard()
-	if (firstPlayer+1)%2 == 0 {
+	if firstPlayer%2 == 0 {
 		b.currentPlayer,b.otherPlayer = b.p1,b.p2
 	}else{
 		b.currentPlayer,b.otherPlayer = b.p2,b.p1
@@ -291,7 +291,7 @@ func (c Case)PlayAction()bool{
 			nbColors++
 		}
 	}
-	return nbColors == 1
+	return nbColors == 1 && c.action!=nil
 }
 
 func (c Case)HasCows()bool{

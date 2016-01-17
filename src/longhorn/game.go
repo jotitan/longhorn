@@ -271,15 +271,23 @@ func (gm GameManager)GetGame(idGame int,sessionId string, name string)(*Game,err
 		}
 		if game.pd1 == nil {
 			game.pd1 = &PlayerDialog{sessionId:sessionId}
-			if name != "" {
-				game.Board.p1.Name = name
+			if game.Board.p1.Name == "" {
+				if name != "" {
+					game.Board.p1.Name = name
+				}else{
+					game.Board.p1.Name = "Player 1"
+				}
 			}
 			return game, nil
 		}
 		if game.pd2 == nil {
 			game.pd2 = &PlayerDialog{sessionId:sessionId}
-			if name != "" {
-				game.Board.p2.Name = name
+			if game.Board.p2.Name == "" {
+				if name != "" {
+					game.Board.p2.Name = name
+				}else{
+					game.Board.p2.Name = "Player 2"
+				}
 			}
 			return game, nil
 		}
@@ -294,7 +302,11 @@ func (gm * GameManager)CreateGame(sessionId string, name string)*Game{
 	g := Game{Board:NewBoard(id)}
 	g.previousFirstPlayer = g.Board.currentPlayer.Id
 	g.pd1 = &PlayerDialog{sessionId:sessionId}
-	g.Board.p1.Name = name
+	if name != "" {
+		g.Board.p1.Name = name
+	}else{
+		g.Board.p1.Name = "Player 1"
+	}
 	gm.games = append(gm.games,&g)
 	gm.gamesById[id] = &g
 	return &g
