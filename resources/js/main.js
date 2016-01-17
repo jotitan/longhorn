@@ -7,3 +7,17 @@ $(function(){
     Message.init("#idMessage");
 });
 
+var Status = {
+    ok:function(id){
+        $('.status>span:first').css('backgroundColor','green');
+        $('.status>span:last').html('connected to game ' + id);
+    },
+    ko:function(){
+        $('.status>span:first').css('backgroundColor','red');
+        $('.status>span:last').html('error');
+    },
+    connecting:function(){
+        $('.status>span:first').css('backgroundColor','orange');
+        $('.status>span:last').html('connecting...');
+    }
+}

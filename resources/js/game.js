@@ -5,7 +5,7 @@ var GameManager = {
     currentCase:null,
     treatMessage:function(data){
         Message.show("");
-
+        Helper.clear();
         //redraw cases
         this.cases = this._extractDatas(data);
         this.currentCase = data.CurrentCase;
@@ -15,7 +15,7 @@ var GameManager = {
         if(data.Action == "win"){
             // Win and begin are managed as same
             data.Action = "begin";
-            Message.show("Player " + data.Winner + " win : " + data.Info);
+            Message.show(data.Winner + " win : " + data.Info);
         }
 
         // manage action if is user
@@ -98,19 +98,28 @@ var GameManager = {
         this.idGame = data.Id;
         this.connect(data.Id);
     },
-    connect:function(id){
+    connect:function(id,nbTry){
+        Status.connecting();
         var serverConnect = new EventSource('/connect?idGame=' + id);
         serverConnect.onmessage = function(data){
-            console.log("Receive",data.data)
+            Status.ok(id);
+            console.log("Receive",data.data);
             GameManager.treatMessage(JSON.parse(data.data));
         };
 
         serverConnect.onerror = function(data){
-            console.log("ERR",data);
+            Status.ko();
+            serverConnect.close();
+            if(nbTry == null || nbTry < 10){
+            // Try to reconnect
+                setTimeout(function(){
+                    GameManager.connect(id,nbTry!=null ? nbTry+1:1);
+                },1000);
+            }
         };
 
         serverConnect.addEventListener('info',function(data){
-            console.log("Info",data.data);
+            Message.show(data.data);
         });
 
         serverConnect.addEventListener('userid',function(data){
@@ -174,6 +183,7 @@ var GameManager = {
 
         switch(params.Action){
             case "move" :
+                Message.append("Select next case");
                 // When previous action modify board, select move after
                 Helper.add("Select case",null);
                 Detector.runDetectCase(params.Moves["0"],function(data){
@@ -181,6 +191,7 @@ var GameManager = {
                 });
                 break;
             case "stole":
+                Message.append("Stole your opponent");
                 // color selected auto, stole cow or money (list), choose next case
                 Helper.add("Color selected",Helper.convert(colors,"cow"));
                 var results = {selcolor:GameManager.getLastColor()};
@@ -199,6 +210,7 @@ var GameManager = {
                 }
                 break;
             case "swallow" :
+                Message.append("Stole cows on adjacent cell");
                 Helper.add("Color selected",Helper.convert(colors,"cow"));
                 Helper.add("Select case",null);
 
@@ -215,6 +227,7 @@ var GameManager = {
                 });
                 break;
             case "killcolor" :
+                 Message.append("You have to kill a cow color");
                  Helper.add("Color selected",Helper.convert(colors,"cow"));
                  var act = Helper.add("Kill color",Helper.convert([0,1,2,3],"color"));
                  act.start(function(data){
@@ -225,11 +238,13 @@ var GameManager = {
                  });
                 break;
             case "begin" :
+                Message.append("Place your opponent on board");
                 // select first placement of player
                 Helper.add("Select case",null);
                 Detector.runDetectCase(params.Neighbors,function(data){Helper.clear();GameManager.sendUserAction(params.Action,data);});
                 break;
             case "snake" :
+                Message.append("That's a snake, loose one cow of each color");
                 // Case action, take the last colors
                 Helper.add("Color selected",Helper.convert(colors,"cow"));
                 var results = {selcolor:GameManager.getLastColor()};
@@ -237,8 +252,10 @@ var GameManager = {
                 this.chooseManyCases(0,params.Colors,params.Neighbors,results);
                 break;
             case "replay" :
+                Message.append("You will replay");
                 //break;
             case "money" :
+                Message.append("You win some money !");
                 //break;
             default:
                 // select color, select case, no cation
@@ -254,12 +271,13 @@ var GameManager = {
             return GameManager.sendUserAction("snake",results);
         }
         var _self = this;
+        // Possible to place on empty case
         if(colors[currentColor] == 1){
             Helper.add("Place color",Helper.convert([currentColor],"color"));
              Detector.runDetectCase(moves,function(data){
                 results.colors[currentColor] = data.next;
                 _self.chooseManyCases(currentColor+1,colors,moves,results);
-             } );
+             },true );
         } else{
             this.chooseManyCases(currentColor+1,colors,moves,results);
         }
@@ -301,50 +319,50 @@ var GameCreator = {
 };
 
 var Detector = {
-    runDetectCase:function(moves,clickAction){
-    if(moves == null || moves.length == 0){
-        return false;
+    runDetectCase:function(moves,clickAction,canBeEmpty){
+        if(moves == null || moves.length == 0){
+            return false;
+        }
+        var _selfMouse = this;
+        $('#canvas').unbind('mousemove.detectcase').bind('mousemove.detectcase',function(e){
+            if(e.offsetX > 905){return;}
+            var caseOn = Math.floor((e.offsetY-10)/200)*3 + Math.floor((e.offsetX-10)/300);
+            if(_selfMouse.selectedCase!=null && _selfMouse.selectedCase.position == caseOn){
+                return
+            }
+            // check if case can be selected : belong to list and not empty
+            if(moves != null){
+                if(!moves.some(function(pos){return pos == caseOn})){
+                    return;
+                }
+            }
+            if(canBeEmpty == null && !GameManager.checkCaseNotEmpty(caseOn)){
+                // No enough cows on this case
+                return;
+            }
+            if(_selfMouse.selectedCase!=null){
+               _selfMouse.selectedCase.selected = false;
+            }
+            _selfMouse.selectedCase = GameManager.getCase(caseOn);
+            _selfMouse.selectedCase.selected = true;
+            GameManager.draw();
+        });
+        $('#canvas').unbind('click.detectcase').bind('click.detectcase',function(e){
+           if(e.offsetX > 905){return;}
+           var caseOn = Math.floor((e.offsetY-10)/200)*3 + Math.floor((e.offsetX-10)/300);
+           if(moves != null){
+                if(!moves.some(function(pos){return pos == caseOn})){
+                    return;
+                }
+           }
+           if(canBeEmpty == null && !GameManager.checkCaseNotEmpty(caseOn)){
+                return;
+           }
+           $('#canvas').unbind('mousemove.detectcase').unbind('click.detectcase');
+           if(clickAction!=null){
+                clickAction({next:caseOn});
+           }
+        });
+        return true;
     }
-    var _selfMouse = this;
-    $('#canvas').unbind('mousemove.detectcase').bind('mousemove.detectcase',function(e){
-        if(e.offsetX > 905){return;}
-        var caseOn = Math.floor((e.offsetY-10)/200)*3 + Math.floor((e.offsetX-10)/300);
-        if(_selfMouse.selectedCase!=null && _selfMouse.selectedCase.position == caseOn){
-            return
-        }
-        // check if case can be selected : belong to list and not empty
-        if(moves != null){
-            if(!moves.some(function(pos){return pos == caseOn})){
-                return;
-            }
-        }
-        if(!GameManager.checkCaseNotEmpty(caseOn)){
-            // No enough cows on this case
-            return;
-        }
-        if(_selfMouse.selectedCase!=null){
-           _selfMouse.selectedCase.selected = false;
-        }
-        _selfMouse.selectedCase = GameManager.getCase(caseOn);
-        _selfMouse.selectedCase.selected = true;
-        GameManager.draw();
-    });
-    $('#canvas').unbind('click.detectcase').bind('click.detectcase',function(e){
-       if(e.offsetX > 905){return;}
-       var caseOn = Math.floor((e.offsetY-10)/200)*3 + Math.floor((e.offsetX-10)/300);
-       if(moves != null){
-            if(!moves.some(function(pos){return pos == caseOn})){
-                return;
-            }
-       }
-       if(!GameManager.checkCaseNotEmpty(caseOn)){
-            return;
-       }
-       $('#canvas').unbind('mousemove.detectcase').unbind('click.detectcase');
-       if(clickAction!=null){
-            clickAction({next:caseOn});
-       }
-    });
-    return true;
-}
 }
