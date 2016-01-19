@@ -27,7 +27,7 @@ var GameManager = {
     },
     getLastColor:function(){
         var color = -1;
-        this.getCase(this.currentCase).cows.forEach(function(v,i){if(v>0){color=i;}})
+        this.getCase(this.currentCase).cows.forEach(function(v,i){if(v>0){color=i;}});
         return color;
     },
     sendUserAction:function(action,data){
@@ -217,10 +217,10 @@ var GameManager = {
                 // select neibourgh case and color. Next case decided after
                 var results = {selcolor:GameManager.getLastColor()};
                 Detector.runDetectCase(params.Neighbors,function(data){
-                    $.extend(results,data)
+                    $.extend(results,data);
                     var act = Helper.add("Select color",Helper.convert(GameManager.getCase(data.next).cows,"cow"));
                     act.start(function(data){
-                        $.extend(results,data)
+                        $.extend(results,data);
                         Helper.clear();
                         GameManager.sendUserAction(params.Action,results);
                    });
@@ -232,7 +232,7 @@ var GameManager = {
                  var act = Helper.add("Kill color",Helper.convert([0,1,2,3],"color"));
                  act.start(function(data){
                      var results = {selcolor:GameManager.getLastColor()};
-                     $.extend(results,data)
+                     $.extend(results,data);
                      Helper.clear();
                      GameManager.sendUserAction(params.Action,results);
                  });
@@ -282,7 +282,7 @@ var GameManager = {
             this.chooseManyCases(currentColor+1,colors,moves,results);
         }
     },
-}
+};
 
 var Message = {
     panel:null,
@@ -296,7 +296,7 @@ var Message = {
         this.panel.html(this.panel.html() + "<br/>" + message);
     }
 
-}
+};
 
 var GameCreator = {
     join:function(id,name){
@@ -365,4 +365,4 @@ var Detector = {
         });
         return true;
     }
-}
+};

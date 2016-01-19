@@ -1,5 +1,5 @@
 var Helper = {
-    // detect type to draw element : color (0 green), color and nb (° x 3), money ($ 500)
+    // detect type to draw element : color (0 green), color and nb (color x 3), money ($ 500)
     // return true if element can be written ?
     // Current displayed elements
     displayed:[],
@@ -149,7 +149,7 @@ var Helper = {
                 });
         }
     }
-}
+};
 
 var Drawer = {
     drawCase:function(caseBoard){
@@ -166,7 +166,7 @@ var Drawer = {
         canvas.fillRect(x,y,290,190);
         canvas.fillStyle = "white";
         canvas.font = "15px Arial";
-        var centerX = (290 - canvas.measureText(caseBoard.name).width)/2
+        var centerX = (290 - canvas.measureText(caseBoard.name).width)/2;
         canvas.fillText(caseBoard.name,x + centerX,y + 180);
         if(caseBoard.action!=""){
             var title = caseBoard.actionInfo !="" ? caseBoard.actionInfo : caseBoard.action;
@@ -219,4 +219,4 @@ var Drawer = {
         this.drawCase(c);
        },this);
     }
-}
+};

@@ -42,4 +42,4 @@ var PlayerManager = {
             moneys.append('$ ' + player.Moneys[m] + '<br/>');
         }
     }
-}
+} ;

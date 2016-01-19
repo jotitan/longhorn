@@ -20,4 +20,4 @@ var Status = {
         $('.status>span:first').css('backgroundColor','orange');
         $('.status>span:last').html('connecting...');
     }
-}
+};
