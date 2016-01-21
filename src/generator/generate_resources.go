@@ -5,7 +5,7 @@ import (
     "path/filepath"
     "io/ioutil"
     "strings"
-    "regexp"
+    "encoding/base64"
 )
 
 
@@ -21,6 +21,7 @@ func main(){
     outFile.WriteString("import \"strings\"\n")
     outFile.WriteString("import \"path/filepath\"\n")
     outFile.WriteString("import \"io/ioutil\"\n")
+    outFile.WriteString("import \"encoding/base64\"\n")
     outFile.WriteString("import \"fmt\"\n\n")
 
     outFile.WriteString("var resourcesFolder = \"" + resourcesFolder + "\"\n\n")
@@ -50,8 +51,9 @@ func writeCode(out *os.File,resourcesFolder string){
     out.WriteString("\t\t\td=filepath.Join(d,name[:idx])\n")
     out.WriteString("\t\t}\n")
     out.WriteString("\t\tos.MkdirAll(d,os.ModePerm)\n")
-    out.WriteString("\t\tioutil.WriteFile(filepath.Join(resourcesFolder,name),[]byte(data),os.ModePerm)\n")
-    out.WriteString("\t\tfmt.Println(\"=>\",d,\":\",name,len(data))\n")
+    out.WriteString("\t\tdecodeData,_ := base64.StdEncoding.DecodeString(data)\n")
+    out.WriteString("\t\tioutil.WriteFile(filepath.Join(resourcesFolder,name),decodeData,os.ModePerm)\n")
+    out.WriteString("\t\tfmt.Println(\"=>\",d,\":\",name,len(decodeData))\n")
     out.WriteString("\t}\n}\n")
 
     out.WriteString("\n")
@@ -61,7 +63,7 @@ func treat(outFile *os.File,root,dir string){
     f,_ := os.Open(filepath.Join(root,dir))
     files,_ := f.Readdir(-1)
 
-    r2,_ := regexp.Compile("//.*\r\n")
+    //r2,_ := regexp.Compile("//.*\r\n")
     for _,file := range files {
         if file.IsDir() {
             dirName := filepath.Join(dir,file.Name())
@@ -71,10 +73,11 @@ func treat(outFile *os.File,root,dir string){
             in := filepath.Join(root,dir,file.Name())
             data,_ := ioutil.ReadFile(in)
             fmt.Println("TREAT",in)
-
-            strData := strings.Trim(string(r2.ReplaceAll(data,[]byte("")))," ")
-            strData = strings.Replace(strings.Replace(strings.Replace(strData,"\\","\\\\",-1),"\"","\\\"",-1),"\r\n"," ",-1)
-            outFile.WriteString(",\"" + strings.Replace(filepath.Join(dir,file.Name()),"\\","\\\\",-1) + "\":\"" + strData + "\"")
+            strData := base64.StdEncoding.EncodeToString(data)
+            //strData := strings.Trim(string(r2.ReplaceAll(data,[]byte("")))," ")
+            //strData := strings.Replace(strings.Replace(strings.Replace(string(data),"\\","\\\\",-1),"\"","\\\"",-1),"\r\n"," ",-1)
+            //strData := strings.Replace(string(data),"`","``",-1)
+            outFile.WriteString(",\"" + strings.Replace(filepath.Join(dir,file.Name()),"\\","\\\\",-1) + "\":`" + strData  + "`")
         }
     }
 }
