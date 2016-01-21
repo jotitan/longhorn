@@ -32,7 +32,6 @@ func main(){
     treat(outFile,inputResourcesFolder,"")
     outFile.WriteString("}\n\n")
 
-    //outFile.WriteString("}\n\nfmt.Println(\"Check generating resources\")\n")
     writeCode(outFile,resourcesFolder)
     outFile.WriteString("}\n")
     outFile.Close()
@@ -46,8 +45,14 @@ func writeCode(out *os.File,resourcesFolder string){
     out.WriteString("for name,data := range files {\n")
     out.WriteString("\tif name!=\"\" {\n")
     out.WriteString("\t\td:=resourcesFolder\n")
+    sep := ""
+    if os.PathSeparator == "\\" {
+        sep = fmt.Sprintf("\\%c",os.PathSeparator)
+    }else {
+        sep = fmt.Sprintf("%c",os.PathSeparator)
+    }
 
-    out.WriteString(fmt.Sprintf("\t\tif idx:= strings.LastIndex(name,\"\\%c\") ; idx !=-1 {\n",os.PathSeparator))
+    out.WriteString(fmt.Sprintf("\t\tif idx:= strings.LastIndex(name,\"%s\") ; idx !=-1 {\n",sep))
     out.WriteString("\t\t\td=filepath.Join(d,name[:idx])\n")
     out.WriteString("\t\t}\n")
     out.WriteString("\t\tos.MkdirAll(d,os.ModePerm)\n")
