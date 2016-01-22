@@ -46,7 +46,7 @@ func writeCode(out *os.File,resourcesFolder string){
     out.WriteString("\tif name!=\"\" {\n")
     out.WriteString("\t\td:=resourcesFolder\n")
     sep := ""
-    if os.PathSeparator == "\\" {
+    if os.PathSeparator == '\\' {
         sep = fmt.Sprintf("\\%c",os.PathSeparator)
     }else {
         sep = fmt.Sprintf("%c",os.PathSeparator)
