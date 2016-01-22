@@ -1,3 +1,3 @@
 package main
 
-//go:generate generate_resources ../resources longhorn resources
+//go:generate go tool generate_resources ../resources longhorn resources
