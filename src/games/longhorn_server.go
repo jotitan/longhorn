@@ -71,8 +71,11 @@ func setSessionID(response http.ResponseWriter,request http.Request)string{
 
 func root(response http.ResponseWriter, request *http.Request){
 	setSessionID(response,*request)
-	url := request.RequestURI
-	http.ServeFile(response,request,webFolder + url[1:])
+	if url := request.RequestURI ; url == "/"{
+		http.ServeFile(response,request,webFolder + "longhorn.html")
+	}else{
+		http.ServeFile(response,request,webFolder + url[1:])
+	}
 }
 
 // connect to a party to listen server message
