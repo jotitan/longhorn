@@ -119,7 +119,7 @@ var GameManager = {
         };
 
         serverConnect.addEventListener('info',function(data){
-            Message.show(data.data);
+            Message.append(data.data);
         });
 
         serverConnect.addEventListener('userid',function(data){
@@ -300,7 +300,7 @@ var Message = {
 
 var GameCreator = {
     join:function(id,name){
-        this._load('/join?idGame=' + id + '&name=' + name);
+        this._load('/join?idGame=' + id + ((name!=null)?'&name=' + name:''));
     },
     create:function(name){
         this._load('/join?name=' + name);
@@ -311,12 +311,23 @@ var GameCreator = {
             success:function(data){
                 $('#idPanelGame').show();
                 $('#idJoinPanel').hide();
-                Message.show("Load game with id " + data.Id);
+                Message.append("Load game with id " + data.Id);
+                location
+                var link = location.origin + "/?id=" + data.Id;
+                Message.append('Share link : <a href="' + link + '">' + link + '</a>');
                 GameManager.create(data);
             }
           });
+    },
+    // Load game if field id is present in url
+    init:function(){
+        var searchId = new RegExp(/id=(\d+)/).exec(location.search);
+        if(searchId!=null && searchId.length == 2){
+            this.join(parseInt(searchId[1]));
+        }
+        return this;
     }
-};
+}.init();
 
 var Detector = {
     runDetectCase:function(moves,clickAction,canBeEmpty){

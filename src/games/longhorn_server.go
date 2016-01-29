@@ -71,7 +71,11 @@ func setSessionID(response http.ResponseWriter,request http.Request)string{
 
 func root(response http.ResponseWriter, request *http.Request){
 	setSessionID(response,*request)
-	if url := request.RequestURI ; url == "/"{
+	url := request.RequestURI
+	if idx := strings.Index(request.RequestURI,"?") ; idx != -1 {
+		url = url[:idx]
+	}
+	if url == "/"{
 		http.ServeFile(response,request,webFolder + "longhorn.html")
 	}else{
 		http.ServeFile(response,request,webFolder + url[1:])
@@ -104,13 +108,19 @@ func join(response http.ResponseWriter, r *http.Request){
 	if idGame := r.FormValue("idGame") ; idGame != "" {
 		if id,err := strconv.ParseInt(idGame,10,32);err == nil {
 			g, _ = gameManager.GetGame(int(id),sessionId,name)
+			if g == nil {
+				// Create a game with the specific id
+				g = gameManager.CreateGameFromId(sessionId,name,int(id))
+			}
 		}
 	}
 	if g == nil {
+		logger.GetLogger().Info("create game")
 		g = gameManager.CreateGame(sessionId,name)
 	}
 	http.SetCookie(response,&http.Cookie{Name:"gameid",Value:fmt.Sprintf("%d",g.Board.GetId())})
 	m := longhorn.NewServerMessage(g.Board)
+
 	response.Header().Set("Content-type","application/json")
 	response.Write(m.ToJSON())
 }

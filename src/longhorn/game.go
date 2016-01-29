@@ -209,6 +209,10 @@ type Game struct{
 	previousFirstPlayer int
 }
 
+func (g Game)GetPlayers()(*PlayerDialog,*PlayerDialog){
+	return g.pd1,g.pd2
+}
+
 func (g Game)HasWinner()(bool,*Player){
 	if g.Board.p1.IsWinner() {
 		return true,g.Board.p1
@@ -234,7 +238,7 @@ func (g * Game)ConnectPlayer(r http.ResponseWriter,sessionId string)(*PlayerDial
 	}
 	if p != nil {
 		p.setResponse(r)
-		p.sendMessage("info",[]byte("You are connected"))
+		p.sendMessage("info",[]byte("You are connected to game"))
 		p.sendMessage("userid",[]byte(fmt.Sprintf("%d",id)))
 		if g.pd1 != nil && g.pd2 != nil {
 			// Run game
@@ -296,10 +300,8 @@ func (gm GameManager)GetGame(idGame int,sessionId string, name string)(*Game,err
 	return nil,errors.New("Game doesn't exist")
 }
 
-func (gm * GameManager)CreateGame(sessionId string, name string)*Game{
-	id := gm.counterIdGame
-	gm.counterIdGame++
-	g := Game{Board:NewBoard(id)}
+func (gm * GameManager)CreateGameFromId(sessionId string, name string, idGame int)*Game{
+	g := Game{Board:NewBoard(idGame)}
 	g.previousFirstPlayer = g.Board.currentPlayer.Id
 	g.pd1 = &PlayerDialog{sessionId:sessionId}
 	if name != "" {
@@ -307,7 +309,18 @@ func (gm * GameManager)CreateGame(sessionId string, name string)*Game{
 	}else{
 		g.Board.p1.Name = "Player 1"
 	}
-	gm.games = append(gm.games,&g)
-	gm.gamesById[id] = &g
-	return &g
+	pg := &g
+	gm.games = append(gm.games,pg)
+	gm.gamesById[idGame] = pg
+	return pg
+}
+
+func (gm * GameManager)CreateGame(sessionId string, name string)*Game{
+	id := gm.counterIdGame
+	gm.counterIdGame++
+	if _,exist := gm.gamesById[id] ; exist{
+		// Try next id
+		return gm.CreateGame(sessionId,name)
+	}
+	return gm.CreateGameFromId(sessionId,name,id)
 }
